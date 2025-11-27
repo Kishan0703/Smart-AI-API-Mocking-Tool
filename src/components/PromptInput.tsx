@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { Send, Sparkles, Loader2 } from "lucide-react";
+import { Send, Sparkles, Loader2, Wand2 } from "lucide-react";
 import { useAppStore } from "@/lib/store";
 import { cn } from "@/lib/utils";
 
@@ -16,7 +16,7 @@ const EXAMPLE_PROMPTS = [
 export function PromptInput() {
   const [prompt, setPrompt] = useState("");
   const [showExamples, setShowExamples] = useState(false);
-  const { isGenerating, setIsGenerating, addEndpoint, setError, error, apiKey } = useAppStore();
+  const { isGenerating, setIsGenerating, addEndpoint, setError, error } = useAppStore();
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   // Auto-resize textarea
@@ -37,7 +37,7 @@ export function PromptInput() {
       const response = await fetch("/api/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ prompt: prompt.trim(), apiKey }),
+        body: JSON.stringify({ prompt: prompt.trim() }),
       });
 
       const data = await response.json();
@@ -67,9 +67,14 @@ export function PromptInput() {
     <div className="w-full max-w-4xl mx-auto">
       <div className="relative">
         {/* Main Input Container */}
-        <div className="bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden transition-all duration-200 hover:shadow-xl focus-within:shadow-xl focus-within:border-indigo-300">
-          <div className="flex items-start p-4">
-            <Sparkles className="w-5 h-5 text-indigo-500 mt-3 mr-3 flex-shrink-0" />
+        <div className="relative bg-white rounded-2xl shadow-xl border-2 border-gray-200 overflow-hidden transition-all duration-300 hover:shadow-2xl hover:border-indigo-200 focus-within:shadow-2xl focus-within:border-indigo-400">
+          {/* Gradient Top Border */}
+          <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500" />
+          
+          <div className="flex items-start p-5 pt-6">
+            <div className="p-2 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl mr-4 flex-shrink-0">
+              <Wand2 className="w-5 h-5 text-white" />
+            </div>
             <textarea
               ref={textareaRef}
               value={prompt}
@@ -78,16 +83,16 @@ export function PromptInput() {
               onFocus={() => setShowExamples(true)}
               onBlur={() => setTimeout(() => setShowExamples(false), 200)}
               placeholder="Describe the API you need in plain English..."
-              className="flex-1 resize-none border-0 bg-transparent text-gray-900 placeholder-gray-400 focus:ring-0 focus:outline-none text-lg min-h-[60px] max-h-[200px] py-2"
+              className="flex-1 resize-none border-0 bg-transparent text-gray-900 placeholder-gray-400 focus:ring-0 focus:outline-none text-lg min-h-[60px] max-h-[200px] py-2 leading-relaxed"
               rows={1}
             />
             <button
               onClick={handleGenerate}
               disabled={!prompt.trim() || isGenerating}
               className={cn(
-                "ml-3 p-3 rounded-xl transition-all duration-200",
+                "ml-4 p-4 rounded-xl transition-all duration-300 flex-shrink-0",
                 prompt.trim() && !isGenerating
-                  ? "bg-indigo-600 text-white hover:bg-indigo-700 shadow-md hover:shadow-lg"
+                  ? "bg-gradient-to-r from-indigo-600 to-purple-600 text-white hover:from-indigo-700 hover:to-purple-700 shadow-lg hover:shadow-xl hover:scale-105"
                   : "bg-gray-100 text-gray-400 cursor-not-allowed"
               )}
             >
@@ -101,8 +106,11 @@ export function PromptInput() {
 
           {/* Example Prompts */}
           {showExamples && !prompt && (
-            <div className="border-t border-gray-100 px-4 py-3 bg-gray-50">
-              <p className="text-xs text-gray-500 mb-2 font-medium">Try an example:</p>
+            <div className="border-t border-gray-100 px-5 py-4 bg-gradient-to-b from-gray-50 to-white">
+              <p className="text-xs text-gray-500 mb-3 font-semibold uppercase tracking-wide flex items-center gap-2">
+                <Sparkles className="w-3 h-3" />
+                Try an example
+              </p>
               <div className="flex flex-wrap gap-2">
                 {EXAMPLE_PROMPTS.slice(0, 3).map((example, index) => (
                   <button
@@ -111,7 +119,7 @@ export function PromptInput() {
                       setPrompt(example);
                       setShowExamples(false);
                     }}
-                    className="text-xs px-3 py-1.5 bg-white border border-gray-200 rounded-full text-gray-600 hover:border-indigo-300 hover:text-indigo-600 transition-colors truncate max-w-[300px]"
+                    className="text-xs px-4 py-2 bg-white border-2 border-gray-200 rounded-full text-gray-600 hover:border-indigo-400 hover:text-indigo-600 hover:bg-indigo-50 transition-all truncate max-w-[300px] hover:scale-[1.02]"
                   >
                     {example}
                   </button>
@@ -123,16 +131,24 @@ export function PromptInput() {
 
         {/* Error Message */}
         {error && (
-          <div className="mt-3 p-3 bg-red-50 border border-red-200 rounded-lg text-red-600 text-sm">
+          <div className="mt-4 p-4 bg-red-50 border-2 border-red-200 rounded-xl text-red-600 text-sm flex items-start gap-3 animate-fade-in">
+            <div className="w-5 h-5 rounded-full bg-red-100 flex items-center justify-center flex-shrink-0 mt-0.5">
+              <span className="text-red-500 text-xs font-bold">!</span>
+            </div>
             {error}
           </div>
         )}
       </div>
 
       {/* Helper Text */}
-      <p className="text-center text-gray-500 text-sm mt-4">
-        Press <kbd className="px-2 py-1 bg-gray-100 rounded text-xs font-mono">Enter</kbd> to generate or{" "}
-        <kbd className="px-2 py-1 bg-gray-100 rounded text-xs font-mono">Shift + Enter</kbd> for new line
+      <p className="text-center text-gray-500 text-sm mt-6 flex items-center justify-center gap-3">
+        <span className="flex items-center gap-1">
+          Press <kbd className="px-2 py-1 bg-gray-100 border border-gray-200 rounded text-xs font-mono">Enter</kbd> to generate
+        </span>
+        <span className="text-gray-300">•</span>
+        <span className="flex items-center gap-1">
+          <kbd className="px-2 py-1 bg-gray-100 border border-gray-200 rounded text-xs font-mono">Shift + Enter</kbd> for new line
+        </span>
       </p>
     </div>
   );

@@ -1,6 +1,7 @@
 {
-  "/api/endpoints/[id]/route": "app/api/endpoints/[id]/route.js",
   "/api/generate/route": "app/api/generate/route.js",
   "/api/mock/[slug]/route": "app/api/mock/[slug]/route.js",
+  "/docs/page": "app/docs/page.js",
+  "/examples/page": "app/examples/page.js",
   "/page": "app/page.js"
 }

@@ -837,6 +837,8 @@ var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$types$2e$ts__$
 ;
 ;
 ;
+// Get the API key from environment variable (server-side only - never exposed to client)
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 async function generateWithGemini(prompt, apiKey) {
     const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`, {
         method: "POST",
@@ -848,14 +850,87 @@ async function generateWithGemini(prompt, apiKey) {
                 {
                     parts: [
                         {
-                            text: `You are a mock data generator. Generate realistic JSON mock data based on this request: "${prompt}"
+                            text: `You are an expert mock data generator for API development and testing. Your task is to generate realistic, production-quality JSON mock data based on the user's request.
 
-IMPORTANT: Return ONLY valid JSON data, no markdown, no code blocks, no explanation. Just the raw JSON.
+## CRITICAL RULES:
+1. Return ONLY valid, parseable JSON - no markdown formatting, no code blocks (\`\`\`json), no explanatory text, no preamble, no postamble
+2. The response must start with { or [ and end with } or ]
+3. All strings must use double quotes, not single quotes
+4. No trailing commas in objects or arrays
+5. Use proper JSON data types: strings, numbers, booleans, null, arrays, objects
 
-The data should be realistic and contextually appropriate. If the request mentions a number of items, generate that many. Include relevant fields based on the context.
+## DATA GENERATION GUIDELINES:
 
-Example: If asked for "5 users with name and email", return:
-[{"id":1,"name":"John Smith","email":"john.smith@email.com"},{"id":2,"name":"Jane Doe","email":"jane.doe@email.com"},...]
+### User Request: "${prompt}"
+
+### Quantity:
+- If a specific number is mentioned (e.g., "5 users", "10 products"), generate exactly that many items
+- If no number is specified, generate 5-10 items by default
+- For single item requests (e.g., "a user profile"), return a single object, not an array
+
+### Field Generation:
+- Infer appropriate fields from the context (e.g., "users" → id, name, email, createdAt)
+- Use realistic, diverse data that reflects real-world scenarios
+- Include common fields even if not explicitly requested:
+  * Timestamps: createdAt, updatedAt (ISO 8601 format)
+  * IDs: Use sequential integers or realistic UUIDs
+  * Status fields where appropriate (active, pending, completed, etc.)
+  * Relational IDs if context suggests relationships (userId, productId, etc.)
+
+### Data Realism:
+- Names: Use diverse, international names (not just "John Doe")
+- Emails: Match email to name format (firstname.lastname@domain.com)
+- Dates: Use recent, realistic dates (within last 2 years unless specified)
+- Phone numbers: Use proper formats with country codes
+- Addresses: Include street, city, state/province, zip/postal code, country
+- URLs: Use realistic domain names and paths
+- Prices: Use appropriate decimal places and realistic ranges
+- Text content: Generate contextually appropriate, varied text (not Lorem ipsum unless requested)
+- Images: Use placeholder image URLs like https://picsum.photos/200/300?random=1
+- Booleans: Use realistic distribution (not all true or all false)
+
+### Domain-Specific Patterns:
+Recognize common entities and apply best practices:
+
+- **Users/People**: id, firstName, lastName, email, phone, avatar, role, status, createdAt
+- **Products**: id, name, description, price, category, stock, imageUrl, rating, reviews
+- **Posts/Articles**: id, title, content, author, tags, publishedAt, views, likes
+- **Orders**: id, userId, items[], totalAmount, status, orderDate, shippingAddress
+- **Comments**: id, userId, postId, content, createdAt, likes, replies[]
+- **Events**: id, title, description, date, location, attendees, category
+- **Todos/Tasks**: id, title, description, completed, priority, dueDate, assignedTo
+
+### Data Structure:
+- Return arrays for collections: [{"id": 1, ...}, {"id": 2, ...}]
+- Return single objects for individual items: {"id": 1, "name": "...", ...}
+- Nest objects appropriately (e.g., user: {id, name}, not userId and userName separately)
+- Use arrays for one-to-many relationships where contextually appropriate
+
+### Edge Cases:
+- Include some variation in data (different string lengths, null values occasionally, varying numbers)
+- For status fields, use realistic distributions (not all "active")
+- For ratings, use realistic ranges (e.g., 3.5-4.8 stars, not all 5.0)
+- For dates, ensure logical ordering (createdAt before updatedAt)
+
+### Prohibited Content:
+- Do not include sensitive/real personal information (SSNs, real credit cards, real passwords)
+- Use fake but realistic-looking data
+- For passwords/tokens, use placeholder strings like "hashed_password_here"
+
+## OUTPUT FORMAT:
+Return ONLY the JSON data. Your response should be immediately parseable by JSON.parse() without any preprocessing.
+
+CORRECT ✓:
+[{"id":1,"name":"Sarah Johnson","email":"sarah.johnson@example.com","role":"developer"}]
+
+INCORRECT ✗:
+\`\`\`json
+[{"id":1,"name":"Sarah Johnson"}]
+\`\`\`
+
+INCORRECT ✗:
+Here's your mock data:
+[{"id":1,"name":"Sarah Johnson"}]
 
 Generate the mock data now:`
                         }
@@ -893,7 +968,7 @@ Generate the mock data now:`
 async function POST(request) {
     try {
         const body = await request.json();
-        const { prompt, apiKey } = body;
+        const { prompt } = body;
         if (!prompt || typeof prompt !== "string") {
             return __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$server$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["NextResponse"].json({
                 success: false,
@@ -902,11 +977,11 @@ async function POST(request) {
                 status: 400
             });
         }
-        // Generate mock data - use Gemini if API key provided, otherwise use local generator
+        // Generate mock data - use Gemini if API key is configured, otherwise use local generator
         let data;
-        if (apiKey) {
+        if (GEMINI_API_KEY) {
             try {
-                data = await generateWithGemini(prompt, apiKey);
+                data = await generateWithGemini(prompt, GEMINI_API_KEY);
             } catch (error) {
                 console.error("Gemini API error:", error);
                 // Fallback to local generator if Gemini fails

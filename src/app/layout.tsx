@@ -1,20 +1,29 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Inter, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const inter = Inter({
+  variable: "--font-inter",
   subsets: ["latin"],
+  display: "swap",
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+const jetbrainsMono = JetBrains_Mono({
+  variable: "--font-jetbrains",
   subsets: ["latin"],
+  display: "swap",
 });
 
 export const metadata: Metadata = {
-  title: "Smart API Mocker - AI-Powered Mock API Generator",
-  description: "Create mock APIs with plain English. Generate realistic test data, simulate chaos mode, and test all HTTP methods instantly.",
+  title: "MockMaster - AI-Powered Mock API Generator",
+  description: "Create mock REST APIs in seconds, not hours. Generate realistic test data with AI, simulate chaos mode, and test all HTTP methods instantly.",
+  keywords: ["mock api", "api testing", "fake api", "test data", "api generator", "developer tools"],
+  authors: [{ name: "MockMaster" }],
+  openGraph: {
+    title: "MockMaster - AI-Powered Mock API Generator",
+    description: "Create mock REST APIs in seconds, not hours. Generate realistic test data with AI.",
+    type: "website",
+  },
 };
 
 export default function RootLayout({
@@ -23,9 +32,9 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" className="scroll-smooth">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`${inter.variable} ${jetbrainsMono.variable} antialiased`}
       >
         {children}
       </body>

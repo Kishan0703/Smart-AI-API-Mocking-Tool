@@ -12,6 +12,9 @@ import {
   X,
   RefreshCw,
   ExternalLink,
+  Code2,
+  FileJson,
+  Link2,
 } from "lucide-react";
 
 export function JsonEditor() {
@@ -19,7 +22,7 @@ export function JsonEditor() {
   const [editMode, setEditMode] = useState(false);
   const [jsonText, setJsonText] = useState("");
   const [error, setError] = useState<string | null>(null);
-  const [copied, setCopied] = useState(false);
+  const [copied, setCopied] = useState<string | null>(null);
 
   useEffect(() => {
     if (currentEndpoint) {
@@ -31,14 +34,14 @@ export function JsonEditor() {
 
   if (!currentEndpoint) {
     return (
-      <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-8">
-        <div className="text-center text-gray-500">
-          <div className="w-16 h-16 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center">
-            <Edit3 className="w-8 h-8 text-gray-400" />
+      <div className="bg-white rounded-2xl shadow-xl border-2 border-gray-100 p-12">
+        <div className="text-center">
+          <div className="w-20 h-20 mx-auto mb-6 bg-gradient-to-br from-gray-100 to-gray-200 rounded-2xl flex items-center justify-center">
+            <Code2 className="w-10 h-10 text-gray-400" />
           </div>
-          <h3 className="text-lg font-medium text-gray-900 mb-2">No Endpoint Selected</h3>
-          <p className="text-sm">
-            Generate a mock API above or select one from your endpoints list.
+          <h3 className="text-xl font-bold text-gray-900 mb-3">No Endpoint Selected</h3>
+          <p className="text-gray-500 max-w-sm mx-auto">
+            Generate a mock API above or select one from your endpoints list to view and edit the response data.
           </p>
         </div>
       </div>
@@ -72,11 +75,11 @@ export function JsonEditor() {
     setError(null);
   };
 
-  const handleCopy = async () => {
+  const handleCopy = async (text: string, id: string) => {
     try {
-      await navigator.clipboard.writeText(jsonText);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
+      await navigator.clipboard.writeText(text);
+      setCopied(id);
+      setTimeout(() => setCopied(null), 2000);
     } catch (e) {
       console.error("Failed to copy:", e);
     }
@@ -87,29 +90,34 @@ export function JsonEditor() {
     : `/api/mock/${currentEndpoint.slug}`;
 
   return (
-    <div className="bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden">
+    <div className="bg-white rounded-2xl shadow-xl border-2 border-gray-100 overflow-hidden">
       {/* Header */}
-      <div className="px-6 py-4 border-b border-gray-200 bg-gray-50">
+      <div className="px-6 py-5 border-b border-gray-100 bg-gradient-to-r from-gray-50 to-white">
         <div className="flex items-center justify-between">
-          <div>
-            <h3 className="font-semibold text-gray-900">{currentEndpoint.name}</h3>
-            <p className="text-sm text-gray-500 mt-1 line-clamp-1">
-              {currentEndpoint.prompt}
-            </p>
+          <div className="flex items-center gap-4">
+            <div className="p-3 bg-indigo-100 rounded-xl">
+              <FileJson className="w-5 h-5 text-indigo-600" />
+            </div>
+            <div>
+              <h3 className="font-bold text-gray-900 text-lg">{currentEndpoint.name}</h3>
+              <p className="text-sm text-gray-500 mt-0.5 line-clamp-1">
+                {currentEndpoint.prompt}
+              </p>
+            </div>
           </div>
           <div className="flex items-center gap-2">
             {editMode ? (
               <>
                 <button
                   onClick={handleCancel}
-                  className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+                  className="p-2.5 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-xl transition-all"
                   title="Cancel"
                 >
                   <X className="w-5 h-5" />
                 </button>
                 <button
                   onClick={handleSave}
-                  className="p-2 text-green-600 hover:text-green-700 hover:bg-green-50 rounded-lg transition-colors"
+                  className="p-2.5 text-white bg-green-500 hover:bg-green-600 rounded-xl transition-all shadow-sm"
                   title="Save"
                 >
                   <Save className="w-5 h-5" />
@@ -118,11 +126,11 @@ export function JsonEditor() {
             ) : (
               <>
                 <button
-                  onClick={handleCopy}
-                  className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+                  onClick={() => handleCopy(jsonText, "json")}
+                  className="p-2.5 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-xl transition-all"
                   title="Copy JSON"
                 >
-                  {copied ? (
+                  {copied === "json" ? (
                     <Check className="w-5 h-5 text-green-500" />
                   ) : (
                     <Copy className="w-5 h-5" />
@@ -130,7 +138,7 @@ export function JsonEditor() {
                 </button>
                 <button
                   onClick={() => setEditMode(true)}
-                  className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+                  className="p-2.5 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-xl transition-all"
                   title="Edit JSON"
                 >
                   <Edit3 className="w-5 h-5" />
@@ -142,27 +150,36 @@ export function JsonEditor() {
       </div>
 
       {/* Endpoint URL */}
-      <div className="px-6 py-3 bg-indigo-50 border-b border-indigo-100">
+      <div className="px-6 py-4 bg-gradient-to-r from-indigo-50 to-purple-50 border-b border-indigo-100">
         <div className="flex items-center justify-between">
           <div className="flex-1 min-w-0">
-            <p className="text-xs text-indigo-600 font-medium mb-1">Your Live Endpoint</p>
-            <code className="text-sm text-indigo-900 font-mono truncate block">
+            <div className="flex items-center gap-2 mb-2">
+              <Link2 className="w-4 h-4 text-indigo-600" />
+              <p className="text-xs text-indigo-600 font-semibold uppercase tracking-wide">
+                Live Endpoint URL
+              </p>
+            </div>
+            <code className="text-sm text-indigo-900 font-mono bg-white/60 px-3 py-1.5 rounded-lg truncate block border border-indigo-200">
               {endpointUrl}
             </code>
           </div>
           <div className="flex items-center gap-2 ml-4">
             <button
-              onClick={() => navigator.clipboard.writeText(endpointUrl)}
-              className="p-2 text-indigo-600 hover:bg-indigo-100 rounded-lg transition-colors"
+              onClick={() => handleCopy(endpointUrl, "url")}
+              className="p-2.5 text-indigo-600 hover:bg-indigo-100 rounded-xl transition-all"
               title="Copy URL"
             >
-              <Copy className="w-4 h-4" />
+              {copied === "url" ? (
+                <Check className="w-4 h-4 text-green-500" />
+              ) : (
+                <Copy className="w-4 h-4" />
+              )}
             </button>
             <a
               href={endpointUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="p-2 text-indigo-600 hover:bg-indigo-100 rounded-lg transition-colors"
+              className="p-2.5 text-indigo-600 hover:bg-indigo-100 rounded-xl transition-all"
               title="Open in new tab"
             >
               <ExternalLink className="w-4 h-4" />
@@ -174,7 +191,8 @@ export function JsonEditor() {
       {/* JSON Editor */}
       <div className="relative">
         {error && (
-          <div className="absolute top-0 left-0 right-0 p-3 bg-red-50 border-b border-red-200 text-red-600 text-sm">
+          <div className="absolute top-0 left-0 right-0 p-4 bg-red-50 border-b border-red-200 text-red-600 text-sm flex items-center gap-2 z-10">
+            <span className="w-5 h-5 rounded-full bg-red-100 flex items-center justify-center text-xs font-bold">!</span>
             {error}
           </div>
         )}
@@ -183,27 +201,40 @@ export function JsonEditor() {
           onChange={(e) => setJsonText(e.target.value)}
           readOnly={!editMode}
           className={cn(
-            "w-full h-[400px] p-4 font-mono text-sm resize-none focus:outline-none",
+            "w-full h-[400px] p-6 font-mono text-sm resize-none focus:outline-none leading-relaxed",
             editMode
-              ? "bg-yellow-50 text-gray-900"
+              ? "bg-amber-50 text-gray-900 border-l-4 border-amber-400"
               : "bg-gray-900 text-green-400",
             error && "pt-16"
           )}
           spellCheck={false}
         />
+        
+        {/* Edit Mode Indicator */}
+        {editMode && (
+          <div className="absolute bottom-4 right-4 px-3 py-1.5 bg-amber-100 text-amber-700 text-xs font-medium rounded-full">
+            Editing Mode
+          </div>
+        )}
       </div>
 
       {/* Footer with Schema Info */}
-      <div className="px-6 py-3 bg-gray-50 border-t border-gray-200">
-        <div className="flex items-center justify-between text-xs text-gray-500">
-          <span>
-            Schema: {Array.isArray(currentEndpoint.data) ? "Array" : "Object"} •{" "}
-            {Array.isArray(currentEndpoint.data)
-              ? `${currentEndpoint.data.length} items`
-              : `${Object.keys(currentEndpoint.data as object).length} fields`}
-          </span>
-          <span>
-            Updated: {new Date(currentEndpoint.updatedAt).toLocaleString()}
+      <div className="px-6 py-4 bg-gray-50 border-t border-gray-100">
+        <div className="flex items-center justify-between text-sm text-gray-500">
+          <div className="flex items-center gap-4">
+            <span className="flex items-center gap-2">
+              <div className="w-2 h-2 rounded-full bg-green-500" />
+              {Array.isArray(currentEndpoint.data) ? "Array" : "Object"}
+            </span>
+            <span className="text-gray-300">•</span>
+            <span>
+              {Array.isArray(currentEndpoint.data)
+                ? `${currentEndpoint.data.length} items`
+                : `${Object.keys(currentEndpoint.data as object).length} fields`}
+            </span>
+          </div>
+          <span className="text-gray-400">
+            Updated {new Date(currentEndpoint.updatedAt).toLocaleString()}
           </span>
         </div>
       </div>
