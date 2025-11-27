@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
-import { Zap, Menu, X, Github, BookOpen, ChevronDown } from "lucide-react";
+import { Zap, Menu, X, Github, BookOpen, ChevronDown, Key, Wrench } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const navLinks = [
@@ -13,9 +13,15 @@ const navLinks = [
   { label: "Docs", href: "/docs" },
 ];
 
+const toolsLinks = [
+  { label: "API Key Tester", href: "/tools/api-key-tester", icon: Key, description: "Verify if your API keys work" },
+];
+
 export function Navbar() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isToolsOpen, setIsToolsOpen] = useState(false);
+  const toolsRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -23,6 +29,16 @@ export function Navbar() {
     };
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (toolsRef.current && !toolsRef.current.contains(event.target as Node)) {
+        setIsToolsOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
   return (
@@ -58,6 +74,42 @@ export function Navbar() {
                   {link.label}
                 </Link>
               ))}
+              
+              {/* Tools Dropdown */}
+              <div ref={toolsRef} className="relative">
+                <button
+                  onClick={() => setIsToolsOpen(!isToolsOpen)}
+                  className="flex items-center gap-1 text-sm font-medium text-gray-600 hover:text-indigo-600 transition-colors"
+                >
+                  <Wrench className="w-4 h-4" />
+                  Tools
+                  <ChevronDown className={cn("w-4 h-4 transition-transform", isToolsOpen && "rotate-180")} />
+                </button>
+                
+                {isToolsOpen && (
+                  <div className="absolute top-full right-0 mt-2 w-64 bg-white rounded-xl shadow-xl border border-gray-200 overflow-hidden animate-fade-in z-50">
+                    {toolsLinks.map((tool) => {
+                      const Icon = tool.icon;
+                      return (
+                        <Link
+                          key={tool.href}
+                          href={tool.href}
+                          onClick={() => setIsToolsOpen(false)}
+                          className="flex items-start gap-3 p-4 hover:bg-gray-50 transition-colors"
+                        >
+                          <div className="p-2 bg-indigo-100 rounded-lg">
+                            <Icon className="w-4 h-4 text-indigo-600" />
+                          </div>
+                          <div>
+                            <div className="font-medium text-gray-900">{tool.label}</div>
+                            <div className="text-xs text-gray-500">{tool.description}</div>
+                          </div>
+                        </Link>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
             </div>
 
             {/* Desktop Actions */}
@@ -138,6 +190,25 @@ export function Navbar() {
                 {link.label}
               </Link>
             ))}
+            
+            {/* Tools Section */}
+            <div className="py-3 border-b border-gray-100">
+              <div className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">Tools</div>
+              {toolsLinks.map((tool) => {
+                const Icon = tool.icon;
+                return (
+                  <Link
+                    key={tool.href}
+                    href={tool.href}
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className="flex items-center gap-3 py-2 text-gray-900 hover:text-indigo-600 transition-colors"
+                  >
+                    <Icon className="w-5 h-5" />
+                    {tool.label}
+                  </Link>
+                );
+              })}
+            </div>
           </div>
 
           <div className="mt-8 space-y-4">

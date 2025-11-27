@@ -74,6 +74,15 @@ type RouteHandlerConfig<Route extends AppRouteHandlerRoutes = AppRouteHandlerRou
   type __Unused = __Check
 }
 
+// Validate ../../../src/app/tools/api-key-tester/page.tsx
+{
+  type __IsExpected<Specific extends AppPageConfig<"/tools/api-key-tester">> = Specific
+  const handler = {} as typeof import("../../../src/app/tools/api-key-tester/page.js")
+  type __Check = __IsExpected<typeof handler>
+  // @ts-ignore
+  type __Unused = __Check
+}
+
 // Validate ../../../src/app/api/endpoints/[id]/route.ts
 {
   type __IsExpected<Specific extends RouteHandlerConfig<"/api/endpoints/[id]">> = Specific
@@ -96,6 +105,15 @@ type RouteHandlerConfig<Route extends AppRouteHandlerRoutes = AppRouteHandlerRou
 {
   type __IsExpected<Specific extends RouteHandlerConfig<"/api/mock/[slug]">> = Specific
   const handler = {} as typeof import("../../../src/app/api/mock/[slug]/route.js")
+  type __Check = __IsExpected<typeof handler>
+  // @ts-ignore
+  type __Unused = __Check
+}
+
+// Validate ../../../src/app/api/test-api-key/route.ts
+{
+  type __IsExpected<Specific extends RouteHandlerConfig<"/api/test-api-key">> = Specific
+  const handler = {} as typeof import("../../../src/app/api/test-api-key/route.js")
   type __Check = __IsExpected<typeof handler>
   // @ts-ignore
   type __Unused = __Check
