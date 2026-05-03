@@ -29,6 +29,7 @@ A powerful, AI-powered mock API generator that allows developers to create reali
 - Real-time validation
 - Copy to clipboard functionality
 
+
 ### Phase 2: Chaos Mode & Dynamic Routing
 
 #### 1. Chaos Mode
@@ -168,9 +169,3 @@ The AI generator automatically detects and generates appropriate data for:
 ## Hackathon
 
 Built for the **Overclock Hackathon** - Problem Statement #5: Smart AI API Mocking Tool
-
----
-
-**Made with ⚡ for developers who move fast**
-
-
