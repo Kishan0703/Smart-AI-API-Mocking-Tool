@@ -182,7 +182,7 @@ export function PostmanTester() {
         headers: responseHeaders,
         size: new Blob([text]).size,
       });
-    } catch (error) {
+    } catch {
       const endTime = performance.now();
       setResult({
         status: 0,

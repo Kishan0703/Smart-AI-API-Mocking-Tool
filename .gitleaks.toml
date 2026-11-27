@@ -1,0 +1,14 @@
+# Gitleaks configuration
+#
+# Extends the built-in rule set. The example environment template ships
+# placeholder variable names on purpose — explicitly allowed here so the
+# secret scanner doesn't flag it on every run.
+
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Example env template — placeholders, not real secrets"
+paths = [
+  '''\.env\.example$''',
+]

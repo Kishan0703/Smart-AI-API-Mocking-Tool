@@ -484,7 +484,7 @@ function ExampleModal({ example, onClose }: { example: Example; onClose: () => v
               </button>
             </div>
             <div className="p-4 bg-gray-100 rounded-xl font-mono text-sm text-gray-700">
-              "{example.prompt}"
+              &quot;{example.prompt}&quot;
             </div>
           </div>
 
@@ -636,7 +636,7 @@ export default function ExamplesPage() {
             </div>
             <h3 className="text-lg font-semibold text-gray-900 mb-2">No examples found</h3>
             <p className="text-gray-500">
-              Try adjusting your search or filter to find what you're looking for.
+              Try adjusting your search or filter to find what you&apos;re looking for.
             </p>
           </div>
         )}

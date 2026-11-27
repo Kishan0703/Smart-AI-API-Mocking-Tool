@@ -5,7 +5,6 @@ import { useAppStore } from "@/lib/store";
 import { HttpMethod } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import {
-  Play,
   Loader2,
   Clock,
   CheckCircle,
@@ -92,7 +91,7 @@ export function ApiTester() {
         responseTime: Math.round(endTime - startTime),
         success: response.ok,
       });
-    } catch (error) {
+    } catch {
       const endTime = performance.now();
       setResult({
         status: 0,

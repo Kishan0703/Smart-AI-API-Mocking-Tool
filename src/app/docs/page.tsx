@@ -174,7 +174,7 @@ export default function DocsPage() {
                       <div>
                         <h3 className="font-semibold !text-black m-0">Generate mock data</h3>
                         <p className="text-gray-600 mt-1 mb-0">
-                          Click "Generate" and AI will create realistic JSON responses.
+                          Click &quot;Generate&quot; and AI will create realistic JSON responses.
                         </p>
                       </div>
                     </div>
@@ -229,14 +229,14 @@ export default function DocsPage() {
                     <div className="p-4 border-l-4 border-green-500 bg-green-50 rounded-r-xl">
                       <p className="font-semibold text-green-800 m-0">✓ Good Prompt</p>
                       <p className="text-green-700 mt-1 mb-0 font-mono text-sm">
-                        "Array of 5 products with id, name, price (USD), category, inStock boolean, and createdAt timestamp"
+                        &quot;Array of 5 products with id, name, price (USD), category, inStock boolean, and createdAt timestamp&quot;
                       </p>
                     </div>
 
                     <div className="p-4 border-l-4 border-red-500 bg-red-50 rounded-r-xl">
                       <p className="font-semibold text-red-800 m-0">✗ Vague Prompt</p>
                       <p className="text-red-700 mt-1 mb-0 font-mono text-sm">
-                        "Some product data"
+                        &quot;Some product data&quot;
                       </p>
                     </div>
                   </div>
@@ -246,7 +246,7 @@ export default function DocsPage() {
                     <li>Specify the data structure (array, object, nested)</li>
                     <li>Include field names and data types</li>
                     <li>Mention the number of items you need</li>
-                    <li>Add context for realistic values (e.g., "US phone numbers")</li>
+                    <li>Add context for realistic values (e.g., &quot;US phone numbers&quot;)</li>
                   </ul>
 
                   <h2 className="text-xl font-bold !text-black mt-8 mb-4">Example Prompts</h2>
@@ -337,7 +337,7 @@ export default function DocsPage() {
 
                   <p className="text-lg text-gray-600 leading-relaxed">
                     Chaos Mode allows you to simulate real-world API behavior by adding random delays, 
-                    error responses, and network issues to test your application's resilience.
+                    error responses, and network issues to test your application&apos;s resilience.
                   </p>
 
                   <h2 className="text-xl font-bold !text-black mt-8 mb-4">Features</h2>

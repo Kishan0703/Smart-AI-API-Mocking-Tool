@@ -1,0 +1,43 @@
+# CodeQL — semantic code analysis (SAST) by GitHub Advanced Security.
+#
+# Separate from CI because it has its own cadence: every push/PR plus a
+# weekly scheduled scan that catches vulnerabilities disclosed *after*
+# the code was written (new queries + new CVEs).
+
+name: CodeQL
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  schedule:
+    - cron: "30 5 * * 1" # Mondays 05:30 UTC
+
+permissions:
+  security-events: write # upload SARIF findings to the Security tab
+  contents: read
+  actions: read
+
+concurrency:
+  group: codeql-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  analyze:
+    name: "SAST (javascript-typescript)"
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: github/codeql-action/init@v3
+        with:
+          languages: javascript-typescript
+          # security-extended = the default suite plus deeper security queries
+          queries: security-extended
+
+      - uses: github/codeql-action/autobuild@v3
+
+      - uses: github/codeql-action/analyze@v3
+        with:
+          category: "/language:javascript-typescript"

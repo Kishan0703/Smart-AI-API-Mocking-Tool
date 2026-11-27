@@ -17,12 +17,12 @@ export function generateContextAwareData(prompt: string): unknown {
   const parsed = parsePrompt(prompt);
   
   if (parsed.isArray) {
-    return Array.from({ length: parsed.count }, (_, index) => 
-      generateSingleItem(parsed.fields, index)
+    return Array.from({ length: parsed.count }, () =>
+      generateSingleItem(parsed.fields)
     );
   }
   
-  return generateSingleItem(parsed.fields, 0);
+  return generateSingleItem(parsed.fields);
 }
 
 function parsePrompt(prompt: string): ParsedSchema {
@@ -219,17 +219,17 @@ function getEntityContextFields(prompt: string): Record<string, string> {
   return {};
 }
 
-function generateSingleItem(fields: Record<string, SchemaField>, index: number): Record<string, unknown> {
+function generateSingleItem(fields: Record<string, SchemaField>): Record<string, unknown> {
   const item: Record<string, unknown> = {};
   
   for (const [fieldName, field] of Object.entries(fields)) {
-    item[fieldName] = generateFieldValue(field.type, index);
+    item[fieldName] = generateFieldValue(field.type);
   }
   
   return item;
 }
 
-function generateFieldValue(type: string, index: number): unknown {
+function generateFieldValue(type: string): unknown {
   switch (type) {
     // IDs
     case "id":

@@ -32,6 +32,7 @@ Thumbs.db
 
 # Testing
 coverage
+tsconfig.tsbuildinfo
 
 # Mock data storage (persisted locally)
 mock-data.json

@@ -104,7 +104,7 @@ export function Hero() {
                   <div className="flex items-center gap-3 p-4 bg-white dark:bg-slate-900 rounded-xl border-2 border-indigo-200 dark:border-indigo-800 shadow-sm">
                     <Sparkles className="w-5 h-5 text-indigo-500" />
                     <span className="text-gray-700 dark:text-gray-300 font-medium">
-                      "Give me 5 users with name, email, and avatar"
+                      &quot;Give me 5 users with name, email, and avatar&quot;
                     </span>
                   </div>
                 </div>
