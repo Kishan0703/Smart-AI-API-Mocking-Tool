@@ -166,7 +166,7 @@ export function UseCases() {
             <span className="gradient-text">Developer Workflow</span>
           </h2>
           <p className="text-xl text-gray-600 dark:text-gray-300">
-            Whether you're building, testing, learning, or demoing - 
+            Whether you&apos;re building, testing, learning, or demoing -
             MockMaster adapts to your needs.
           </p>
         </div>

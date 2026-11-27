@@ -1,0 +1,65 @@
+# Gemini integration — live end-to-end test of the AI generation path.
+#
+# Deliberately opt-in so day-to-day CI stays offline, deterministic and
+# free (the faker fallback is covered by scripts/smoke-test.mjs):
+#
+#   • Manual:  Actions tab → "Gemini integration" → Run workflow
+#   • On a PR: apply the `ai-integration` label
+#
+# Requires the GEMINI_API_KEY repository secret (see docs/CI-CD.md).
+
+name: Gemini integration
+
+on:
+  workflow_dispatch:
+  pull_request:
+    types: [opened, synchronize, reopened, labeled]
+
+permissions:
+  contents: read
+
+jobs:
+  gemini:
+    name: "Live AI generation (Gemini)"
+    # Opt-in: manual runs, or PRs labelled `ai-integration`
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      contains(github.event.label.name, 'ai-integration')
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Production build
+        run: npm run build
+
+      - name: Start production server (with Gemini key)
+        run: |
+          npm run start > server.log 2>&1 &
+          echo $! > server.pid
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+
+      - name: Integration tests (real Gemini API)
+        run: npm run test:integration
+        env:
+          RUN_GEMINI_INTEGRATION: "1"
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+
+      - name: Stop server and dump log on failure
+        if: always()
+        run: |
+          kill "$(cat server.pid)" 2>/dev/null || true
+          if [ "${{ job.status }}" != "success" ]; then
+            echo "::group::Server log"
+            tail -n 50 server.log
+            echo "::endgroup::"
+          fi

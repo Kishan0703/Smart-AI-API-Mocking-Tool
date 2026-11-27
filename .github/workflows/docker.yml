@@ -1,0 +1,179 @@
+# Docker — build, scan, publish the container image.
+#
+# Pull requests: build the image and vulnerability-scan it (never pushed),
+# so a Dockerfile change can't break a release silently.
+#
+# Pushes to main / version tags: build a multi-arch image (amd64 + arm64),
+# publish it to GitHub Container Registry, gate it with a Trivy scan,
+# upload findings to the Security tab, attach a CycloneDX SBOM, and run
+# the smoke suite against the *published* image — test what you ship.
+
+name: Docker
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+    tags: ["v*.*.*"]
+
+permissions:
+  contents: read
+  packages: write # push to ghcr.io
+  security-events: write # Trivy SARIF → Security tab
+
+concurrency:
+  group: docker-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  image:
+    name: "Image: build · scan · publish"
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+
+      # ---------- Pull requests: validate, never publish ----------
+
+      - uses: docker/setup-buildx-action@v4
+        if: github.event_name == 'pull_request'
+
+      - name: Build image (amd64, load locally — not pushed)
+        if: github.event_name == 'pull_request'
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          platforms: linux/amd64
+          load: true
+          tags: mockmaster:pr-validation
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Trivy scan (fail on CRITICAL/HIGH)
+        if: github.event_name == 'pull_request'
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          image-ref: mockmaster:pr-validation
+          format: table
+          exit-code: "1"
+          ignore-unfixed: true
+          vuln-type: os,library
+          severity: CRITICAL,HIGH
+
+      # ---------- Push events: publish to GHCR ----------
+
+      - uses: docker/setup-qemu-action@v4
+        if: github.event_name == 'push'
+      - uses: docker/setup-buildx-action@v4
+        if: github.event_name == 'push'
+
+      - name: Log in to GitHub Container Registry
+        if: github.event_name == 'push'
+        uses: docker/login-action@v4
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.repository_owner }}
+          # Built-in token — no extra secret to configure.
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # Automatic, SemVer-aware tags:
+      #   push to main → :main, :sha-<commit>, :latest
+      #   tag v2.1.0  → :2.1.0, :2.1, :latest
+      - name: Docker metadata (tags & labels)
+        if: github.event_name == 'push'
+        id: meta
+        uses: docker/metadata-action@v6
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=ref,event=branch
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=sha,format=long
+            type=raw,value=latest,enable={{is_default_branch}}
+
+      - name: Build and push (linux/amd64 + linux/arm64)
+        if: github.event_name == 'push'
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      # Vulnerability gate on the published image.
+      - name: Trivy vulnerability scan (fail on CRITICAL/HIGH)
+        if: github.event_name == 'push'
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          image-ref: ${{ fromJSON(steps.meta.outputs.json).tags[0] }}
+          format: table
+          exit-code: "1"
+          ignore-unfixed: true
+          vuln-type: os,library
+          severity: CRITICAL,HIGH
+
+      # Same scan as a SARIF report → rendered in the repo Security tab.
+      - name: Trivy SARIF report
+        if: github.event_name == 'push'
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          image-ref: ${{ fromJSON(steps.meta.outputs.json).tags[0] }}
+          format: sarif
+          output: trivy-results.sarif
+          ignore-unfixed: true
+          vuln-type: os,library
+          severity: CRITICAL,HIGH
+
+      - name: Upload SARIF to the Security tab
+        if: github.event_name == 'push'
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: trivy-results.sarif
+
+      # SBOM: machine-readable inventory of every package inside the
+      # image — the artifact auditors and supply-chain tools expect.
+      - name: Generate SBOM (CycloneDX)
+        if: github.event_name == 'push'
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          image-ref: ${{ fromJSON(steps.meta.outputs.json).tags[0] }}
+          format: cyclonedx
+          output: sbom.cdx.json
+
+      - name: Attach SBOM artifact
+        if: github.event_name == 'push'
+        uses: actions/upload-artifact@v7
+        with:
+          name: sbom-cyclonedx
+          path: sbom.cdx.json
+          retention-days: 90
+
+      # Final proof: the image just published actually serves traffic
+      # and passes the full smoke suite.
+      - name: Runtime smoke test (published image)
+        if: github.event_name == 'push'
+        run: |
+          IMAGE="${{ fromJSON(steps.meta.outputs.json).tags[0] }}"
+          docker run -d --name mockmaster-smoke -p 3000:3000 "$IMAGE"
+          RESULT=0
+          sleep 2
+          npm run smoke || RESULT=1
+          if [ "$RESULT" -ne 0 ]; then
+            echo "::group::Container logs"
+            docker logs mockmaster-smoke
+            echo "::endgroup::"
+          fi
+          docker rm -f mockmaster-smoke
+          exit $RESULT

@@ -1,0 +1,123 @@
+# CI — the quality gate every change must pass.
+#
+# Runs on every pull request and every push to main. Fast feedback first
+# (lint/typecheck/tests), then a full production build exercised by a
+# live smoke test, plus three independent security checks.
+
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+# Least privilege — the default GITHUB_TOKEN needs read access only.
+permissions:
+  contents: read
+
+# New pushes to the same PR cancel outdated in-flight runs.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  quality:
+    name: "Quality: lint · typecheck · unit tests"
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - name: Install dependencies (npm ci — reproducible lockfile)
+        run: npm ci
+
+      - name: ESLint
+        run: npm run lint
+
+      - name: TypeScript (tsc --noEmit)
+        run: npm run typecheck
+
+      - name: Unit tests (vitest + coverage)
+        run: npm run test:unit -- --coverage
+
+      - name: Upload coverage report
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: coverage-report
+          path: coverage/
+          retention-days: 14
+          if-no-files-found: warn
+
+  build-and-smoke:
+    name: "Build · smoke test (live server)"
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    needs: quality
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      # `next build` is the real gate: it type-checks, bundles, tree-shakes
+      # and prerenders. A broken production build must never reach main.
+      - name: Production build (next build)
+        run: npm run build
+
+      # Boots the production server and exercises every critical API path
+      # offline (faker fallback path — no API key needed). Failures print
+      # the server log for fast diagnosis.
+      - name: Smoke test against live production server
+        run: |
+          npm run start > server.log 2>&1 &
+          SERVER_PID=$!
+          RESULT=0
+          npm run smoke || RESULT=1
+          if [ "$RESULT" -ne 0 ]; then
+            echo "::group::Server log"
+            tail -n 50 server.log
+            echo "::endgroup::"
+          fi
+          kill "$SERVER_PID" 2>/dev/null || true
+          exit $RESULT
+
+  security:
+    name: "Security: audit · secrets · dependency review"
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      # Full history — gitleaks scans all commits, not just the diff.
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      # Fails the build on CRITICAL advisories in the dependency tree.
+      # High/moderate findings are reported by `npm audit fix` and by
+      # Dependabot, without blocking every PR on noisy transitive deps.
+      - name: Dependency vulnerability audit (npm audit)
+        run: npm audit --audit-level=critical
+
+      # SAST for hardcoded secrets — keys, tokens, passwords — across
+      # the entire git history. Pinned to a full commit SHA (see
+      # docs/CI-CD.md → "Pinning third-party actions").
+      - name: Secret scan (gitleaks)
+        uses: gitleaks/gitleaks-action@e0c47f4f8be36e29cdc102c57e68cb5cbf0e8d1e # v3
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # Diff-based gate: blocks PRs that introduce a dependency with a
+      # known vulnerability or an incompatible license.
+      - name: Dependency review (pull requests only)
+        if: github.event_name == 'pull_request'
+        uses: actions/dependency-review-action@v5

@@ -1,0 +1,43 @@
+# Dependabot — automated dependency updates with grouped PRs, so routine
+# bumps arrive as one reviewable PR per ecosystem instead of dozens.
+
+version: 2
+
+updates:
+  # npm packages (app dependencies)
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 10
+    groups:
+      minor-and-patch:
+        update-types:
+          - "minor"
+          - "patch"
+    commit-message:
+      prefix: "deps(npm)"
+
+  # GitHub Actions versions used in .github/workflows/*
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+    groups:
+      actions-updates:
+        update-types:
+          - "minor"
+          - "patch"
+    commit-message:
+      prefix: "deps(actions)"
+
+  # Base image tags in the Dockerfile (node:24-alpine)
+  - package-ecosystem: docker
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+    commit-message:
+      prefix: "deps(docker)"

@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
-import { Zap, Menu, X, Github, BookOpen, ChevronDown, Key, Wrench, Sun, Moon } from "lucide-react";
+import { Zap, Menu, X, Github, ChevronDown, Key, Wrench, Sun, Moon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useTheme } from "@/lib/theme-context";
 

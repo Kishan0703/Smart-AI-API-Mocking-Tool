@@ -103,7 +103,7 @@ export default function ApiKeyTesterPage() {
 
       const data: TestResult = await response.json();
       setResult(data);
-    } catch (error) {
+    } catch {
       setResult({
         valid: false,
         status: 0,
@@ -350,7 +350,7 @@ export default function ApiKeyTesterPage() {
           <ul className="space-y-3 text-sm text-gray-600">
             <li className="flex items-start gap-2">
               <span className="text-indigo-500 font-bold">•</span>
-              <span>Make sure you're using the correct key format for each service</span>
+              <span>Make sure you&apos;re using the correct key format for each service</span>
             </li>
             <li className="flex items-start gap-2">
               <span className="text-indigo-500 font-bold">•</span>

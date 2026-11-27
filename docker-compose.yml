@@ -1,0 +1,23 @@
+# Local orchestration for MockMaster.
+#
+#   docker compose up --build
+#
+# Persistence: mock endpoints survive container restarts via the named
+# volume mounted at /app/data (MOCK_DATA_DIR is set in the Dockerfile).
+
+services:
+  mockmaster:
+    build: .
+    image: mockmaster:local
+    ports:
+      - "3000:3000"
+    environment:
+      # Optional — without a key the app falls back to the built-in
+      # faker generator, so the container boots fully functional.
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+    volumes:
+      - mockmaster-data:/app/data
+    restart: unless-stopped
+
+volumes:
+  mockmaster-data:

@@ -1,0 +1,37 @@
+# Never send these to the Docker daemon — keeps builds fast and, more
+# importantly, keeps secrets and local state out of the image layers.
+
+# VCS / CI metadata
+.git
+.github
+.gitignore
+
+# Local dependencies and build output (rebuilt inside the image)
+node_modules
+.next
+out
+
+# Environment & secrets — a leaked .env baked into a public image is
+# game over
+.env
+.env.*
+
+# Runtime state (mock endpoint storage)
+mock-data.json
+
+# Test / tooling artifacts not needed at build time
+coverage
+tests
+docs
+scripts
+
+# Editor / OS noise
+.vscode
+.idea
+.DS_Store
+*.log
+
+# Docker files themselves
+Dockerfile
+.dockerignore
+docker-compose.yml

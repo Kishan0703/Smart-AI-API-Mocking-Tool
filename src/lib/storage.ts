@@ -4,7 +4,10 @@ import path from "path";
 
 // File-based persistent storage for mock endpoints
 // Data survives server restarts!
-const DATA_FILE = path.join(process.cwd(), "mock-data.json");
+// MOCK_DATA_DIR lets containers mount a volume for persistence
+// (defaults to the project root for local development).
+const DATA_DIR = process.env.MOCK_DATA_DIR || process.cwd();
+const DATA_FILE = path.join(DATA_DIR, "mock-data.json");
 
 class MockStorage {
   private endpoints: Map<string, MockEndpoint> = new Map();

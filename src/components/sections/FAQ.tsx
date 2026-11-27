@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { ChevronDown, Plus, Minus } from "lucide-react";
+import { Plus, Minus } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const faqs = [
@@ -62,7 +62,7 @@ export function FAQ() {
             Frequently Asked Questions
           </h2>
           <p className="text-xl text-gray-600 dark:text-gray-300">
-            Everything you need to know about MockMaster. Can't find the answer you're
+            Everything you need to know about MockMaster. Can&apos;t find the answer you&apos;re
             looking for? <a href="mailto:support@mockmaster.dev" className="text-indigo-600 dark:text-indigo-400 hover:underline">Contact our support team</a>.
           </p>
         </div>

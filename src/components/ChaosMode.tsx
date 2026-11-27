@@ -5,14 +5,12 @@ import { useAppStore } from "@/lib/store";
 import { HttpMethod } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import {
-  Zap,
   Clock,
   AlertTriangle,
   Settings,
   ChevronDown,
   ChevronUp,
   Info,
-  Gauge,
   Flame,
 } from "lucide-react";
 

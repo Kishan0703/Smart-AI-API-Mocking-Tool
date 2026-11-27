@@ -1,8 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useAppStore } from "@/lib/store";
-import { MockEndpoint } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import {
   Check,
@@ -10,7 +9,6 @@ import {
   Edit3,
   Save,
   X,
-  RefreshCw,
   ExternalLink,
   Code2,
   FileJson,
@@ -23,14 +21,21 @@ export function JsonEditor() {
   const [jsonText, setJsonText] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState<string | null>(null);
+  const [prevEndpointId, setPrevEndpointId] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (currentEndpoint) {
-      setJsonText(JSON.stringify(currentEndpoint.data, null, 2));
-      setEditMode(false);
-      setError(null);
-    }
-  }, [currentEndpoint?.id]);
+  // Reset the editor whenever a different endpoint is selected.
+  // Official React pattern for "adjust state when a prop changes":
+  // set state during render instead of inside an effect, so no
+  // cascading re-render is triggered.
+  const currentId = currentEndpoint?.id ?? null;
+  if (currentId !== prevEndpointId) {
+    setPrevEndpointId(currentId);
+    setJsonText(
+      currentEndpoint ? JSON.stringify(currentEndpoint.data, null, 2) : ""
+    );
+    setEditMode(false);
+    setError(null);
+  }
 
   if (!currentEndpoint) {
     return (
@@ -64,7 +69,7 @@ export function JsonEditor() {
       });
 
       setEditMode(false);
-    } catch (e) {
+    } catch {
       setError("Invalid JSON format. Please check your syntax.");
     }
   };

@@ -144,7 +144,7 @@ export const useAppStore = create<AppState>()(
       partialize: (state) => ({ 
         endpoints: state.endpoints,
       }), // Only persist endpoints, not UI state
-      onRehydrate: () => {
+      onRehydrateStorage: () => {
         // When localStorage data is loaded, fetch from server (source of truth)
         return (state, error) => {
           if (error) {
